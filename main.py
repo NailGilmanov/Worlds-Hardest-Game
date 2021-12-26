@@ -4,7 +4,7 @@ pygame.init()
 size = width, height = 300, 300
 screen = pygame.display.set_mode(size)
 
-pygame.display.set_caption('Worlds hardest game')
+pygame.display.set_caption('Worlds hardest game!!!!!!!')
 
 
 running = True
