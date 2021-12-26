@@ -13,7 +13,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    screen.fill(pygame.Color("white"))
+    screen.fill(pygame.Color("orange"))
     pygame.display.flip()
 
 pygame.quit()
