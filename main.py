@@ -4,10 +4,48 @@ import sys
 import pygame
 
 pygame.init()
-size = width, height = 300, 300
+size = width, height = 1000, 600
 screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption('Worlds hardest game!!!!!!!')
+
+FPS = 50
+clock = pygame.time.Clock()
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def start_screen():
+    intro_text = ["САМАЯ СЛОЖНАЯ ИГРА В МИРЕ", "",
+                  "Правила игры:",
+                  "Собрать все монеты",
+                  "и прийти к финишу"]
+
+    fon = pygame.transform.scale(load_image('background.jpg'), (width, height))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 100
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('azure'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 20
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
 
 
 def load_image(name, colorkey=None):
@@ -27,9 +65,8 @@ def load_image(name, colorkey=None):
         image = image.convert_alpha()
     return image
 
-    return image
 
-
+start_screen()
 running = True
 while running:
     for event in pygame.event.get():
