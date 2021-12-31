@@ -83,8 +83,9 @@ tile_images = {
     'purple': load_image('purple_cell.png'),
     'white': load_image('white_cell.png'),
     'fon': load_image('fon.png'),
-    'green': load_image('green_cell.png'),
+    'green': load_image('green_cell.png')
 }
+
 player_image = load_image('main_hero.png')
 
 tile_width = tile_height = 67
@@ -124,10 +125,12 @@ def generate_level(level):
             elif level[y][x] == ',':
                 Tile('green', x, y)
             elif level[y][x] == '!':
+                pass
                 Tile('purple', x, y)
             elif level[y][x] == '@':
                 Tile('green', x, y)
                 new_player = Player(x, y)
+
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
@@ -143,6 +146,19 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    # Список нажатых клавиш
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_RIGHT]:
+        player.rect.x += 5
+    if keys[pygame.K_LEFT]:
+        player.rect.x -= 5
+    if keys[pygame.K_UP]:
+        player.rect.y -= 5
+    if keys[pygame.K_DOWN]:
+        player.rect.y += 5
+
+    # Рендер
     tiles_group.draw(screen)
     player_group.draw(screen)
     pygame.display.flip()
