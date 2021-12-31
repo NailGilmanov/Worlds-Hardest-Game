@@ -125,9 +125,9 @@ def generate_level(level):
                 Tile('green', x, y)
             elif level[y][x] == '!':
                 Tile('purple', x, y)
-            # elif level[y][x] == '@':
-            #     Tile('empty', x, y)
-            #     new_player = Player(x, y)
+            elif level[y][x] == '@':
+                Tile('green', x, y)
+                new_player = Player(x, y)
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
