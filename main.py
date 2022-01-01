@@ -89,7 +89,7 @@ tile_images = {
 player_image = load_image('main_hero.png')
 
 tile_width = tile_height = 67
-hero_width = hero_height = 67
+hero_width = hero_height = 48
 
 player = None
 
@@ -112,6 +112,29 @@ class Player(pygame.sprite.Sprite):
         self.image = player_image
         self.rect = self.image.get_rect().move(
             hero_width * pos_x + 15, hero_height * pos_y + 5)
+
+
+horizontal_borders = pygame.sprite.Group()
+vertical_borders = pygame.sprite.Group()
+
+
+class Border(pygame.sprite.Sprite):
+    # строго вертикальный или строго горизонтальный отрезок
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(all_sprites)
+        all_sprites.add(self)
+        if x1 == x2:  # вертикальная стенка
+            self.add(vertical_borders)
+            self.image = pygame.Surface([1, y2 - y1])
+            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
+        else:  # горизонтальная стенка
+            self.add(horizontal_borders)
+            self.image = pygame.Surface([x2 - x1, 1])
+            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
+
+
+Border(3 * tile_width, 4 * tile_height, 6 * tile_width, 4 * tile_height)
+Border(16 * tile_width, 4 * tile_height, 21 * tile_width, 4 * tile_height)
 
 
 def generate_level(level):
@@ -161,6 +184,8 @@ while running:
     # Рендер
     tiles_group.draw(screen)
     player_group.draw(screen)
+    horizontal_borders.draw(screen)
+    vertical_borders.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
 
