@@ -12,6 +12,10 @@ pygame.display.set_caption('Worlds hardest game!!!!!!!')
 FPS = 50
 clock = pygame.time.Clock()
 
+pygame.mixer.init()
+pygame.mixer.music.load("data/soundtrack.mp3")
+pygame.mixer.music.play(-1)
+
 
 def terminate():
     pygame.quit()
