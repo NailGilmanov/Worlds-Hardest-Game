@@ -113,14 +113,22 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, pos_x, pos_y, right=True):
+        self.right = right
+        self.x = pos_x
+        self.y = pos_y
         super().__init__(enemy_group, all_sprites)
         self.image = enemy_image
         self.rect = self.image.get_rect().move(
-            hero_width * pos_x + 15, hero_height * pos_y + 5)
+            hero_width * pos_x + 20, hero_height * pos_y + 20)
 
-    def draw(self, screen):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), self.width, self.height)
+    def move(self, bound1, bound2):
+        if self.rect.x < bound1 or self.rect.x > bound2:
+            self.right = not self.right
+        if self.right:
+            self.rect.x += 10
+        else:
+            self.rect.x -= 10
 
 
 class Player(pygame.sprite.Sprite):
@@ -153,7 +161,7 @@ class Player(pygame.sprite.Sprite):
 
 
 def generate_level(level):
-    new_player, x, y = None, None, None
+    new_player, x, y, new_enemy, bounds_l, bounds_r = None, None, None, None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -167,15 +175,20 @@ def generate_level(level):
             elif level[y][x] == '@':
                 Tile('green', x, y)
                 new_player = Player(x, y)
-            elif level[y][x] == 'X':
+            elif level[y][x] == 'L':
                 Tile('purple', x, y)
-                new_enemy = Enemy(x, y)
+                new_enemy = Enemy(x, y, right=False)
+                bounds_r = x
+            elif level[y][x] == 'R':
+                Tile('purple', x, y)
+                new_enemy = Enemy(x, y, right=True)
+                bounds_l = x
 
     # вернем игрока, а также размер поля в клетках
-    return new_player, x, y, new_enemy
+    return new_player, x, y, new_enemy, bounds_l, bounds_r
 
 
-player, level_x, level_y, enemy = generate_level(load_level('level1.txt'))
+player, level_x, level_y, enemy, bounds_l, bounds_r = generate_level(load_level('level1.txt'))
 
 clock = pygame.time.Clock()
 
@@ -201,6 +214,9 @@ while running:
     # Рендер
     tiles_group.draw(screen)
     player_group.draw(screen)
+    for enemy in enemy_group:
+        enemy.move(bounds_l * tile_width, (bounds_r + 0.5) * tile_width)
+
     player.update()
     enemy_group.draw(screen)
     pygame.display.flip()
