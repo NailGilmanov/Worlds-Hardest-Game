@@ -91,15 +91,17 @@ tile_images = {
 }
 
 player_image = load_image('main_hero.png')
+enemy_image = load_image('enemy.png')
 
 tile_width = tile_height = 67
-hero_width = hero_height = 48
+hero_width = hero_height = 67
 
 player = None
 
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
 
 
 class Tile(pygame.sprite.Sprite):
@@ -110,35 +112,44 @@ class Tile(pygame.sprite.Sprite):
             tile_width * pos_x, tile_height * pos_y)
 
 
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(enemy_group, all_sprites)
+        self.image = enemy_image
+        self.rect = self.image.get_rect().move(
+            hero_width * pos_x + 15, hero_height * pos_y + 5)
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, self.color, (self.x, self.y), self.width, self.height)
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
+        self.x = pos_x
+        self.y = pos_y
         super().__init__(player_group, all_sprites)
         self.image = player_image
         self.rect = self.image.get_rect().move(
             hero_width * pos_x + 15, hero_height * pos_y + 5)
 
-
-horizontal_borders = pygame.sprite.Group()
-vertical_borders = pygame.sprite.Group()
-
-
-class Border(pygame.sprite.Sprite):
-    # строго вертикальный или строго горизонтальный отрезок
-    def __init__(self, x1, y1, x2, y2):
-        super().__init__(all_sprites)
-        all_sprites.add(self)
-        if x1 == x2:  # вертикальная стенка
-            self.add(vertical_borders)
-            self.image = pygame.Surface([1, y2 - y1])
-            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
-        else:  # горизонтальная стенка
-            self.add(horizontal_borders)
-            self.image = pygame.Surface([x2 - x1, 1])
-            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
+    def update(self):
+        if pygame.sprite.spritecollideany(self, enemy_group):
+            self.__init__(self.x, self.y)
 
 
-Border(3 * tile_width, 4 * tile_height, 6 * tile_width, 4 * tile_height)
-Border(16 * tile_width, 4 * tile_height, 21 * tile_width, 4 * tile_height)
+# class Border(pygame.sprite.Sprite):
+#     # строго вертикальный или строго горизонтальный отрезок
+#     def __init__(self, x1, y1, x2, y2):
+#         super().__init__(all_sprites)
+#         all_sprites.add(self)
+#         if x1 == x2:  # вертикальная стенка
+#             self.add(vertical_borders)
+#             self.image = pygame.Surface([1, y2 - y1])
+#             self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
+#         else:  # горизонтальная стенка
+#             self.add(horizontal_borders)
+#             self.image = pygame.Surface([x2 - x1, 1])
+#             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
 
 def generate_level(level):
@@ -152,17 +163,19 @@ def generate_level(level):
             elif level[y][x] == ',':
                 Tile('green', x, y)
             elif level[y][x] == '!':
-                pass
                 Tile('purple', x, y)
             elif level[y][x] == '@':
                 Tile('green', x, y)
                 new_player = Player(x, y)
+            elif level[y][x] == 'X':
+                Tile('purple', x, y)
+                new_enemy = Enemy(x, y)
 
     # вернем игрока, а также размер поля в клетках
-    return new_player, x, y
+    return new_player, x, y, new_enemy
 
 
-player, level_x, level_y = generate_level(load_level('level1.txt'))
+player, level_x, level_y, enemy = generate_level(load_level('level1.txt'))
 
 clock = pygame.time.Clock()
 
@@ -188,8 +201,8 @@ while running:
     # Рендер
     tiles_group.draw(screen)
     player_group.draw(screen)
-    horizontal_borders.draw(screen)
-    vertical_borders.draw(screen)
+    player.update()
+    enemy_group.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
 
