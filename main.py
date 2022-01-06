@@ -3,6 +3,8 @@ import sys
 
 import pygame
 
+import time
+
 pygame.init()
 size = width, height = 1608, 938
 screen = pygame.display.set_mode(size)
@@ -87,7 +89,8 @@ tile_images = {
     'purple': load_image('purple_cell.png'),
     'white': load_image('white_cell.png'),
     'fon': load_image('fon.png'),
-    'green': load_image('green_cell.png')
+    'green': load_image('green_cell.png'),
+    'green_f': load_image('green_cell.png')
 }
 
 player_image = load_image('main_hero.png')
@@ -103,6 +106,7 @@ tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 border_group = pygame.sprite.Group()
+final_zone_group = pygame.sprite.Group()
 
 
 class Tile(pygame.sprite.Sprite):
@@ -111,6 +115,9 @@ class Tile(pygame.sprite.Sprite):
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
+        if tile_type == 'green_f':
+            print('added')
+            self.add(final_zone_group)
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -144,6 +151,7 @@ class Player(pygame.sprite.Sprite):
         self.image = player_image
         self.rect = self.image.get_rect().move(
             hero_width * pos_x + 15, hero_height * pos_y + 5)
+        self.level = 1
 
     def update(self):
         if pygame.sprite.spritecollideany(self, enemy_group):
@@ -153,7 +161,8 @@ class Player(pygame.sprite.Sprite):
             player_can_move = False
         else:
             player_can_move = True
-
+        if pygame.sprite.spritecollideany(self, final_zone_group):
+            return 'new_level'
         return player_can_move
 
 
@@ -191,10 +200,15 @@ def generate_level(level):
             elif level[y][x] == 'W':
                 Tile('fon', x, y)
                 border = Border(x, y)
+            elif level[y][x] == 'F':
+                Tile('green_f', x, y)
+                border = Border(x, y)
 
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, new_enemy, border
 
+
+level = 1
 
 player, level_x, level_y, enemy, border = generate_level(load_level('level2.txt'))
 
@@ -209,6 +223,16 @@ while running:
 
     # Список нажатых клавиш
     keys = pygame.key.get_pressed()
+
+    if player.update() == 'new_level':
+        level += 1
+        all_sprites.empty()
+        tiles_group.empty()
+        player_group.empty()
+        enemy_group.empty()
+        border_group.empty()
+        final_zone_group.empty()
+        player, level_x, level_y, enemy, border = generate_level(load_level(f'level{level}.txt'))
 
     if keys[pygame.K_RIGHT]:
         player.rect.x += 5
