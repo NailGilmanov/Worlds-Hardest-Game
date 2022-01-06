@@ -196,7 +196,7 @@ def generate_level(level):
     return new_player, x, y, new_enemy, border
 
 
-player, level_x, level_y, enemy, border = generate_level(load_level('level1.txt'))
+player, level_x, level_y, enemy, border = generate_level(load_level('level2.txt'))
 
 clock = pygame.time.Clock()
 
