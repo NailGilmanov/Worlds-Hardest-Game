@@ -6,7 +6,7 @@
 ..W,@,WR#!#!#!#!#WFFFW..
 ..W,,,W#!#!#!#!#LWFFFW..
 ..W,,,WR#!#!#!#!#WFFFW..
-..W,,,W#!#!#!#!#LWFFFW..
+..W,,,W#!#!#!k!#LWFFFW..
 ..W,,,#!WWWWWWWWWWFFFW..
 ..WWWWWWW........WWWWW..
 ........................

@@ -3,7 +3,6 @@ import sys
 
 import pygame
 
-import time
 
 pygame.init()
 size = width, height = 1608, 938
@@ -95,9 +94,11 @@ tile_images = {
 
 player_image = load_image('main_hero.png')
 enemy_image = load_image('enemy.png')
+key_image = load_image('key.png', (255, 255, 255))
 
 tile_width = tile_height = 67
 hero_width = hero_height = 67
+
 
 player = None
 
@@ -107,6 +108,7 @@ player_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 border_group = pygame.sprite.Group()
 final_zone_group = pygame.sprite.Group()
+key_group = pygame.sprite.Group()
 
 
 class Tile(pygame.sprite.Sprite):
@@ -116,7 +118,6 @@ class Tile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
         if tile_type == 'green_f':
-            print('added')
             self.add(final_zone_group)
 
 
@@ -151,7 +152,6 @@ class Player(pygame.sprite.Sprite):
         self.image = player_image
         self.rect = self.image.get_rect().move(
             hero_width * pos_x + 15, hero_height * pos_y + 5)
-        self.level = 1
 
     def update(self):
         if pygame.sprite.spritecollideany(self, enemy_group):
@@ -163,7 +163,19 @@ class Player(pygame.sprite.Sprite):
             player_can_move = True
         if pygame.sprite.spritecollideany(self, final_zone_group):
             return 'new_level'
+        if pygame.sprite.spritecollide(self, key_group, dokill=True):
+            return 'key_was_taken'
         return player_can_move
+
+
+class Key(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        self.x = pos_x
+        self.y = pos_y
+        super().__init__(key_group, all_sprites)
+        self.image = key_image
+        self.rect = self.image.get_rect().move(
+            hero_width * pos_x + 19.5, hero_height * pos_y + 19.5)
 
 
 class Border(pygame.sprite.Sprite):
@@ -203,6 +215,13 @@ def generate_level(level):
             elif level[y][x] == 'F':
                 Tile('green_f', x, y)
                 border = Border(x, y)
+            elif level[y][x] == 'K':
+                Tile('purple', x, y)
+                # new_key = Key(x, y)
+            elif level[y][x] == 'k':
+                Tile('white', x, y)
+                # new_key = Key(x, y)
+
 
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, new_enemy, border
@@ -211,6 +230,8 @@ def generate_level(level):
 level = 1
 
 player, level_x, level_y, enemy, border = generate_level(load_level('level1.txt'))
+
+all_keys = False
 
 clock = pygame.time.Clock()
 
@@ -232,7 +253,11 @@ while running:
         enemy_group.empty()
         border_group.empty()
         final_zone_group.empty()
+        key_group.empty()
         player, level_x, level_y, enemy, border = generate_level(load_level(f'level{level}.txt'))
+    if player.update() == 'key_was_taken':
+        if len(key_group) == 0:
+            all_keys = True
 
     if keys[pygame.K_RIGHT]:
         player.rect.x += 5
@@ -254,6 +279,7 @@ while running:
     # Рендер
     tiles_group.draw(screen)
     player_group.draw(screen)
+    key_group.draw(screen)
     for enemy in enemy_group:
         enemy.move()
     player.update()
