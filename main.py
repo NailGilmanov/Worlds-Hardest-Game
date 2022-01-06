@@ -210,7 +210,7 @@ def generate_level(level):
 
 level = 1
 
-player, level_x, level_y, enemy, border = generate_level(load_level('level2.txt'))
+player, level_x, level_y, enemy, border = generate_level(load_level('level1.txt'))
 
 clock = pygame.time.Clock()
 
