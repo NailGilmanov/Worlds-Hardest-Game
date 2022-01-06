@@ -114,22 +114,26 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, right=True):
+    def __init__(self, pos_x, pos_y, right=None):
         self.right = right
         self.x = pos_x
         self.y = pos_y
         super().__init__(enemy_group, all_sprites)
         self.image = enemy_image
         self.rect = self.image.get_rect().move(
-            hero_width * pos_x + 20, hero_height * pos_y + 20)
+            hero_width * pos_x + 19.5, hero_height * pos_y + 19.5)
 
-    def move(self, bound1, bound2):
-        if self.rect.x < bound1 or self.rect.x > bound2:
-            self.right = not self.right
+    def move(self):
         if self.right:
             self.rect.x += 10
+            if pygame.sprite.spritecollideany(self, border_group):
+                self.rect.x += self.rect.x - pygame.sprite.spritecollideany(self, border_group).rect.x
+                self.right = not self.right
         else:
             self.rect.x -= 10
+            if pygame.sprite.spritecollideany(self, border_group):
+                self.rect.x += pygame.sprite.spritecollideany(self, border_group).rect.x + tile_width - self.rect.x
+                self.right = not self.right
 
 
 class Player(pygame.sprite.Sprite):
@@ -164,7 +168,7 @@ class Border(pygame.sprite.Sprite):
 
 
 def generate_level(level):
-    new_player, x, y, new_enemy, bounds_l, bounds_r, border = None, None, None, None, None, None, None
+    new_player, x, y, new_enemy, border = None, None, None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -181,20 +185,18 @@ def generate_level(level):
             elif level[y][x] == 'L':
                 Tile('purple', x, y)
                 new_enemy = Enemy(x, y, right=False)
-                bounds_r = x
             elif level[y][x] == 'R':
                 Tile('purple', x, y)
                 new_enemy = Enemy(x, y, right=True)
-                bounds_l = x
             elif level[y][x] == 'W':
                 Tile('fon', x, y)
                 border = Border(x, y)
 
     # вернем игрока, а также размер поля в клетках
-    return new_player, x, y, new_enemy, bounds_l, bounds_r, border
+    return new_player, x, y, new_enemy, border
 
 
-player, level_x, level_y, enemy, bounds_l, bounds_r, border = generate_level(load_level('level1.txt'))
+player, level_x, level_y, enemy, border = generate_level(load_level('level1.txt'))
 
 clock = pygame.time.Clock()
 
@@ -229,8 +231,7 @@ while running:
     tiles_group.draw(screen)
     player_group.draw(screen)
     for enemy in enemy_group:
-        enemy.move(bounds_l * tile_width, (bounds_r + 0.5) * tile_width)
-
+        enemy.move()
     player.update()
     enemy_group.draw(screen)
     pygame.display.flip()
