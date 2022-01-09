@@ -172,6 +172,7 @@ class Player(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, key_group, dokill=True):
             if len(key_group) == 0:
                 all_keys = True
+            print('check')
             return 'key_was_taken'
 
         return player_can_move
@@ -267,6 +268,9 @@ level = 1
 
 player, level_x, level_y, enemy, border = generate_level(load_level('level1.txt'))
 
+
+death_count = 0
+
 all_keys = False
 
 clock = pygame.time.Clock()
@@ -281,20 +285,27 @@ while running:
     # Список нажатых клавиш
     keys = pygame.key.get_pressed()
 
-    if player.update() == 'new_level' and all_keys:
-        new_level.change_level()
     if player.update() == 'key_was_taken':
+        print('hello')
         if len(key_group) == 0:
             all_keys = True
+
+    if player.update() == 'new_level' and all_keys:
+        new_level.change_level()
+
     if player.update() == 'death':
         all_keys = False
         hero_x = player.x
         hero_y = player.y
         player.kill()
+        death_count += 1
         player = Player(hero_x, hero_y)
         if key_x and key_y:
             if new_level.level == 1:
                 Key(key_x, key_y)
+            else:
+                all_keys = True
+
 
     if keys[pygame.K_RIGHT]:
         player.rect.x += 5
