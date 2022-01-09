@@ -293,7 +293,8 @@ while running:
         player.kill()
         player = Player(hero_x, hero_y)
         if key_x and key_y:
-            Key(key_x, key_y)
+            if new_level.level == 1:
+                Key(key_x, key_y)
 
     if keys[pygame.K_RIGHT]:
         player.rect.x += 5
