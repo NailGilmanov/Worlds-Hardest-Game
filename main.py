@@ -154,17 +154,26 @@ class Player(pygame.sprite.Sprite):
             hero_width * pos_x + 15, hero_height * pos_y + 5)
 
     def update(self):
+        global all_keys
         if pygame.sprite.spritecollideany(self, enemy_group):
-            self.__init__(self.x, self.y)
+            return 'death'
 
         if pygame.sprite.spritecollideany(self, border_group):
             player_can_move = False
         else:
             player_can_move = True
+
         if pygame.sprite.spritecollideany(self, final_zone_group):
+            if not all_keys:
+                player_can_move = False
+                return player_can_move
             return 'new_level'
+
         if pygame.sprite.spritecollide(self, key_group, dokill=True):
+            if len(key_group) == 0:
+                all_keys = True
             return 'key_was_taken'
+
         return player_can_move
 
 
@@ -175,7 +184,7 @@ class Key(pygame.sprite.Sprite):
         super().__init__(key_group, all_sprites)
         self.image = key_image
         self.rect = self.image.get_rect().move(
-            hero_width * pos_x + 19.5, hero_height * pos_y + 19.5)
+            tile_width * pos_x + 20, tile_height * pos_y + 20)
 
 
 class Border(pygame.sprite.Sprite):
@@ -188,7 +197,12 @@ class Border(pygame.sprite.Sprite):
             hero_width * pos_x, hero_height * pos_y)
 
 
+key_x = None
+key_y = None
+
+
 def generate_level(level):
+    global key_x, key_y
     new_player, x, y, new_enemy, border = None, None, None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -217,15 +231,37 @@ def generate_level(level):
                 border = Border(x, y)
             elif level[y][x] == 'K':
                 Tile('purple', x, y)
-                # new_key = Key(x, y)
+                Key(x, y)
+                key_x = x
+                key_y = y
             elif level[y][x] == 'k':
                 Tile('white', x, y)
-                # new_key = Key(x, y)
-
+                Key(x, y)
+                key_x = x
+                key_y = y
 
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, new_enemy, border
 
+
+class NewLevel:
+    def __init__(self, level):
+        self.level = level
+
+    def change_level(self):
+        self.level += 1
+        all_sprites.empty()
+        tiles_group.empty()
+        player_group.empty()
+        enemy_group.empty()
+        border_group.empty()
+        final_zone_group.empty()
+        key_group.empty()
+        global player, level_x, level_y, enemy, border
+        player, level_x, level_y, enemy, border = generate_level(load_level(f'level{self.level}.txt'))
+
+
+new_level = NewLevel(1)
 
 level = 1
 
@@ -245,19 +281,19 @@ while running:
     # Список нажатых клавиш
     keys = pygame.key.get_pressed()
 
-    if player.update() == 'new_level':
-        level += 1
-        all_sprites.empty()
-        tiles_group.empty()
-        player_group.empty()
-        enemy_group.empty()
-        border_group.empty()
-        final_zone_group.empty()
-        key_group.empty()
-        player, level_x, level_y, enemy, border = generate_level(load_level(f'level{level}.txt'))
+    if player.update() == 'new_level' and all_keys:
+        new_level.change_level()
     if player.update() == 'key_was_taken':
         if len(key_group) == 0:
             all_keys = True
+    if player.update() == 'death':
+        all_keys = False
+        hero_x = player.x
+        hero_y = player.y
+        player.kill()
+        player = Player(hero_x, hero_y)
+        if key_x and key_y:
+            Key(key_x, key_y)
 
     if keys[pygame.K_RIGHT]:
         player.rect.x += 5
