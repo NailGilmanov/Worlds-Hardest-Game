@@ -13,9 +13,9 @@ pygame.display.set_caption('Worlds hardest game!!!!!!!')
 FPS = 50
 clock = pygame.time.Clock()
 
-# pygame.mixer.init()
-# pygame.mixer.music.load("data/soundtrack.mp3")
-# pygame.mixer.music.play(-1)
+pygame.mixer.init()
+pygame.mixer.music.load("data/soundtrack.mp3")
+pygame.mixer.music.play(-1)
 
 
 def terminate():
@@ -98,7 +98,7 @@ key_image = load_image('key.png', (255, 255, 255))
 
 tile_width = tile_height = 67
 hero_width = hero_height = 67
-
+enemy_padding = 19.5
 
 player = None
 
@@ -122,14 +122,37 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, right=None):
-        self.right = right
+    def __init__(self, pos_x, pos_y):
         self.x = pos_x
         self.y = pos_y
         super().__init__(enemy_group, all_sprites)
         self.image = enemy_image
         self.rect = self.image.get_rect().move(
-            hero_width * pos_x + 19.5, hero_height * pos_y + 19.5)
+            hero_width * pos_x + enemy_padding, hero_height * pos_y + enemy_padding)
+
+
+class VerticalEnemy(Enemy):
+    def __init__(self, pos_x, pos_y, top=None):
+        super().__init__(pos_x, pos_y)
+        self.top = top
+
+    def move(self):
+        if self.top:
+            self.rect.y += 10
+            if pygame.sprite.spritecollideany(self, border_group):
+                self.rect.y += self.rect.y - pygame.sprite.spritecollideany(self, border_group).rect.y
+                self.top = not self.top
+        else:
+            self.rect.y -= 10
+            if pygame.sprite.spritecollideany(self, border_group):
+                self.rect.y += pygame.sprite.spritecollideany(self, border_group).rect.y + tile_width - self.rect.y
+                self.top = not self.top
+
+
+class HorizontalEnemy(Enemy):
+    def __init__(self, pos_x, pos_y, right=None):
+        super().__init__(pos_x, pos_y)
+        self.right = right
 
     def move(self):
         if self.right:
@@ -204,7 +227,7 @@ key_y = None
 
 def generate_level(level):
     global key_x, key_y
-    new_player, x, y, new_enemy, border = None, None, None, None, None
+    new_player, x, y, new_enemy, border_block = None, None, None, None, None
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -220,16 +243,22 @@ def generate_level(level):
                 new_player = Player(x, y)
             elif level[y][x] == 'L':
                 Tile('purple', x, y)
-                new_enemy = Enemy(x, y, right=False)
+                new_enemy = HorizontalEnemy(x, y, right=False)
             elif level[y][x] == 'R':
                 Tile('purple', x, y)
-                new_enemy = Enemy(x, y, right=True)
+                new_enemy = HorizontalEnemy(x, y, right=True)
+            elif level[y][x] == 'T':
+                Tile('purple', x, y)
+                new_enemy = VerticalEnemy(x, y, top=True)
+            elif level[y][x] == 'B':
+                Tile('purple', x, y)
+                new_enemy = VerticalEnemy(x, y, top=False)
             elif level[y][x] == 'W':
                 Tile('fon', x, y)
-                border = Border(x, y)
+                border_block = Border(x, y)
             elif level[y][x] == 'F':
                 Tile('green_f', x, y)
-                border = Border(x, y)
+                border_block = Border(x, y)
             elif level[y][x] == 'K':
                 Tile('purple', x, y)
                 Key(x, y)
@@ -242,12 +271,12 @@ def generate_level(level):
                 key_y = y
 
     # вернем игрока, а также размер поля в клетках
-    return new_player, x, y, new_enemy, border
+    return new_player, x, y, new_enemy, border_block
 
 
 class NewLevel:
-    def __init__(self, level):
-        self.level = level
+    def __init__(self, lvl):
+        self.level = lvl
 
     def change_level(self):
         self.level += 1
@@ -305,7 +334,6 @@ while running:
                 Key(key_x, key_y)
             else:
                 all_keys = True
-
 
     if keys[pygame.K_RIGHT]:
         player.rect.x += 5
