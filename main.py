@@ -94,7 +94,8 @@ tile_images = {
 
 player_image = load_image('main_hero.png')
 enemy_image = load_image('enemy.png')
-key_image = load_image('key.png', (255, 255, 255))
+key_image1 = load_image('key2.jpg')  # ключ с белым фоном
+key_image2 = load_image('key1.jpg')  # ключ с фиолетовым фоном
 
 tile_width = tile_height = 67
 hero_width = hero_height = 67
@@ -178,6 +179,8 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         global all_keys
+
+        # смерть главного героя
         if pygame.sprite.spritecollideany(self, enemy_group):
             return 'death'
 
@@ -186,29 +189,33 @@ class Player(pygame.sprite.Sprite):
         else:
             player_can_move = True
 
+        # пересечение с зоной оканчания уровня
         if pygame.sprite.spritecollideany(self, final_zone_group):
             if not all_keys:
                 player_can_move = False
                 return player_can_move
             return 'new_level'
 
+        # подбор ключа
         if pygame.sprite.spritecollide(self, key_group, dokill=True):
             if len(key_group) == 0:
                 all_keys = True
-            print('check')
             return 'key_was_taken'
 
         return player_can_move
 
 
 class Key(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, pos_x, pos_y, white=True):
         self.x = pos_x
         self.y = pos_y
         super().__init__(key_group, all_sprites)
-        self.image = key_image
+        if white:
+            self.image = key_image1
+        else:
+            self.image = key_image2
         self.rect = self.image.get_rect().move(
-            tile_width * pos_x + 20, tile_height * pos_y + 20)
+            tile_width * pos_x + 10, tile_height * pos_y + 10)
 
 
 class Border(pygame.sprite.Sprite):
@@ -223,6 +230,7 @@ class Border(pygame.sprite.Sprite):
 
 key_x = None
 key_y = None
+key_list = []
 
 
 def generate_level(level):
@@ -250,8 +258,14 @@ def generate_level(level):
             elif level[y][x] == 'T':
                 Tile('purple', x, y)
                 new_enemy = VerticalEnemy(x, y, top=True)
+            elif level[y][x] == 'X':
+                Tile('white', x, y)
+                new_enemy = VerticalEnemy(x, y, top=True)
             elif level[y][x] == 'B':
                 Tile('purple', x, y)
+                new_enemy = VerticalEnemy(x, y, top=False)
+            elif level[y][x] == 'Z':
+                Tile('white', x, y)
                 new_enemy = VerticalEnemy(x, y, top=False)
             elif level[y][x] == 'W':
                 Tile('fon', x, y)
@@ -261,14 +275,16 @@ def generate_level(level):
                 border_block = Border(x, y)
             elif level[y][x] == 'K':
                 Tile('purple', x, y)
-                Key(x, y)
+                Key(x, y, white=False)
                 key_x = x
                 key_y = y
+                key_list.append((key_x, key_y, False))
             elif level[y][x] == 'k':
                 Tile('white', x, y)
-                Key(x, y)
+                Key(x, y, white=True)
                 key_x = x
                 key_y = y
+                key_list.append((key_x, key_y, True))
 
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, new_enemy, border_block
@@ -295,7 +311,7 @@ new_level = NewLevel(1)
 
 level = 1
 
-player, level_x, level_y, enemy, border = generate_level(load_level('level1.txt'))
+player, level_x, level_y, enemy, border = generate_level(load_level('level4.txt'))
 
 
 death_count = 0
@@ -314,14 +330,16 @@ while running:
     # Список нажатых клавиш
     keys = pygame.key.get_pressed()
 
+    # подбор ключа
     if player.update() == 'key_was_taken':
-        print('hello')
         if len(key_group) == 0:
             all_keys = True
 
+    # проверка перехода на новый уровень, если взяты все ключи
     if player.update() == 'new_level' and all_keys:
         new_level.change_level()
 
+    # смерть главного героя
     if player.update() == 'death':
         all_keys = False
         hero_x = player.x
@@ -329,9 +347,14 @@ while running:
         player.kill()
         death_count += 1
         player = Player(hero_x, hero_y)
-        if key_x and key_y:
-            if new_level.level == 1:
-                Key(key_x, key_y)
+        if new_level.level == 1 or new_level.level == 4:  # проверяем есть на уровне ключи
+            if key_list:
+                key_group.empty()
+                for x, y, white in key_list:
+                    if white:
+                        Key(x, y)
+                    else:
+                        Key(x, y, white=False)
             else:
                 all_keys = True
 
