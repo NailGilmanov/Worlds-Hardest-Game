@@ -198,6 +198,7 @@ class Player(pygame.sprite.Sprite):
 
         # подбор ключа
         if pygame.sprite.spritecollide(self, key_group, dokill=True):
+            print(len(key_group))
             if len(key_group) == 0:
                 all_keys = True
             return 'key_was_taken'
@@ -311,7 +312,7 @@ new_level = NewLevel(1)
 
 level = 1
 
-player, level_x, level_y, enemy, border = generate_level(load_level('level4.txt'))
+player, level_x, level_y, enemy, border = generate_level(load_level('level1.txt'))
 
 
 death_count = 0
@@ -337,6 +338,7 @@ while running:
 
     # проверка перехода на новый уровень, если взяты все ключи
     if player.update() == 'new_level' and all_keys:
+        key_list = []
         new_level.change_level()
 
     # смерть главного героя
@@ -355,8 +357,8 @@ while running:
                         Key(x, y)
                     else:
                         Key(x, y, white=False)
-            else:
-                all_keys = True
+        else:
+            all_keys = True
 
     if keys[pygame.K_RIGHT]:
         player.rect.x += 5
