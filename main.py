@@ -349,7 +349,7 @@ while running:
         player.kill()
         death_count += 1
         player = Player(hero_x, hero_y)
-        if new_level.level == 1 or new_level.level == 4:  # проверяем есть на уровне ключи
+        if new_level.level == 1 or new_level.level == 4 or new_level.level == 5:  # проверяем есть на уровне ключи
             if key_list:
                 key_group.empty()
                 for x, y, white in key_list:
