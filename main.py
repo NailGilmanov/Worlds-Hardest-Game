@@ -53,6 +53,14 @@ def start_screen():
         clock.tick(FPS)
 
 
+def render_display(death_count, lvl):
+    font = pygame.font.SysFont('didot.ttc', 40)
+    death_img = font.render(f'DEATHS: {death_count}', True, (0, 0, 120))
+    level_img = font.render(f'LEVEL: {lvl}/5', True, (0, 0, 120))
+    screen.blit(death_img, (1400, 20))
+    screen.blit(level_img, (720, 20))
+
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -340,6 +348,7 @@ while running:
     if player.update() == 'new_level' and all_keys:
         key_list = []
         new_level.change_level()
+        level += 1
 
     # смерть главного героя
     if player.update() == 'death':
@@ -385,6 +394,7 @@ while running:
         enemy.move()
     player.update()
     enemy_group.draw(screen)
+    render_display(death_count, level)
     pygame.display.flip()
     clock.tick(FPS)
 
