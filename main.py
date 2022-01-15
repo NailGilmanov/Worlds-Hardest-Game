@@ -23,6 +23,50 @@ def terminate():
     sys.exit()
 
 
+class AnimatedSprite(pygame.sprite.Sprite):
+    def __init__(self, sheet, columns, rows, x, y, start_screen=True):
+        super().__init__(all_sprites)
+        if start_screen:
+            animated_group_start_screen.add(self)
+        else:
+            animated_group_finish_screen.add(self)
+        self.frames = []
+        self.cut_sheet(sheet, columns, rows)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(x, y)
+        self.count = 0
+        self.start_screen = start_screen
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        k = 0
+        for j in range(rows):
+            for i in range(columns):
+                k += 1
+                if k == 10:
+                    break
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
+    def update(self):
+        if self.start_screen:
+            self.count += 1
+            if self.count == 5:
+                print((self.cur_frame + 1) % len(self.frames))
+                self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+                self.image = self.frames[self.cur_frame]
+                self.count = 0
+        else:
+            self.count += 1
+            if self.count == 5:
+                self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+                self.image = self.frames[self.cur_frame]
+                self.count = 0
+
+
 def start_screen():
     intro_text = ["САМАЯ СЛОЖНАЯ ИГРА В МИРЕ", "",
                   "Правила игры:",
@@ -49,6 +93,20 @@ def start_screen():
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
                 return
+        animated_group_start_screen.update()
+        fon = pygame.transform.scale(load_image('background.jpg'), (width, height))
+        screen.blit(fon, (0, 0))
+        font = pygame.font.Font(None, 50)
+        text_coord = 100
+        for line in intro_text:
+            string_rendered = font.render(line, 1, pygame.Color(120, 120, 240))
+            intro_rect = string_rendered.get_rect()
+            text_coord += 10
+            intro_rect.top = text_coord
+            intro_rect.x = 20
+            text_coord += intro_rect.height
+            screen.blit(string_rendered, intro_rect)
+        animated_group_start_screen.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -56,7 +114,7 @@ def start_screen():
 def finish_screen():
     intro_text = ["Вы прошли Самую Сложную Игру в Мире!", "",
                   f"Итоговое количество смертей: {death_count}"]
-
+    animated_group_start_screen.update()
     fon = pygame.transform.scale(load_image('fon.png'), (width, height))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 50)
@@ -77,6 +135,19 @@ def finish_screen():
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
                 return
+        animated_group_finish_screen.update()
+        screen.blit(fon, (0, 0))
+        font = pygame.font.Font(None, 50)
+        text_coord = 100
+        for line in intro_text:
+            string_rendered = font.render(line, 1, pygame.Color(120, 120, 240))
+            intro_rect = string_rendered.get_rect()
+            text_coord += 10
+            intro_rect.top = text_coord
+            intro_rect.x = 20
+            text_coord += intro_rect.height
+            screen.blit(string_rendered, intro_rect)
+        animated_group_finish_screen.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -146,6 +217,8 @@ enemy_group = pygame.sprite.Group()
 border_group = pygame.sprite.Group()
 final_zone_group = pygame.sprite.Group()
 key_group = pygame.sprite.Group()
+animated_group_start_screen = pygame.sprite.Group()
+animated_group_finish_screen = pygame.sprite.Group()
 
 
 class Tile(pygame.sprite.Sprite):
@@ -234,6 +307,7 @@ class Player(pygame.sprite.Sprite):
 
         # подбор ключа
         if pygame.sprite.spritecollide(self, key_group, dokill=True):
+            print(key_group)
             if len(key_group) == 0:
                 all_keys = True
             return 'key_was_taken'
@@ -348,6 +422,12 @@ new_level = NewLevel(1)
 level = 1
 
 player, level_x, level_y, enemy, border = generate_level(load_level('level1.txt'))
+
+# анимированный спрайт на начальном экране
+animated_hero = AnimatedSprite(load_image("animated_hero.png"), 5, 2, 541, 350, start_screen=True)
+
+# анимированный спрайт на конечном экране
+animated_boy = AnimatedSprite(load_image("animated_boy.png"), 4, 3, 900, 561, start_screen=False)
 
 
 death_count = 0
