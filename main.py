@@ -55,7 +55,6 @@ class AnimatedSprite(pygame.sprite.Sprite):
         if self.start_screen:
             self.count += 1
             if self.count == 5:
-                print((self.cur_frame + 1) % len(self.frames))
                 self.cur_frame = (self.cur_frame + 1) % len(self.frames)
                 self.image = self.frames[self.cur_frame]
                 self.count = 0
@@ -307,7 +306,6 @@ class Player(pygame.sprite.Sprite):
 
         # подбор ключа
         if pygame.sprite.spritecollide(self, key_group, dokill=True):
-            print(key_group)
             if len(key_group) == 0:
                 all_keys = True
             return 'key_was_taken'
@@ -469,7 +467,8 @@ while running:
         player.kill()
         death_count += 1
         player = Player(hero_x, hero_y)
-        if new_level.level == 1 or new_level.level == 4 or new_level.level == 5:  # проверяем есть на уровне ключи
+        # проверяем есть на уровне ключи
+        if new_level.level == 1 or new_level.level == 4 or new_level.level == 5:
             if key_list:
                 key_group.empty()
                 for x, y, white in key_list:
